@@ -1,0 +1,73 @@
+# Stage 2 ablation V1: RECON-ONLY (no semantic/JEPA head).
+# Identical to stage2_foundation.yaml except loss.use_semantic=false -> isolates
+# whether the CT-MAE semantic objective helps the foundation representation.
+meta:
+  name: stage2_v1_recononly
+  seed: 0
+  device: cuda
+
+data:
+  manifest: ${DATA_ROOT}/splits/ct_rate_train_zarr.csv
+  v_min: 2
+  v_max: 16
+  det_px: 512
+  batch_size: 1
+  num_workers: 8
+  hu_min: -1024.0
+  hu_max: 1024.0
+  crop_out_size: 256
+  spacing_lo: 1.0
+  spacing_hi: 2.0
+  center_crop: true
+
+model:
+  grid_res: 16
+
+encoder2d:
+  base_ch: 64
+  n_stages: 4
+  ch_mult: 2
+  blocks_per_stage: 2
+  tf_dim: 768
+  tf_depth: 6
+  tf_heads: 12
+
+volume3d:
+  dim: 768
+  depth: 8
+  num_heads: 12
+  refine_type: transformer
+
+fine:
+  n_query: 16384
+  pointdec_mlp: [512, 512, 256]
+
+semantic:
+  depth: 4
+  heads: 12
+
+loss:
+  recon_loss: mse
+  coarse_weight: 1.0
+  fine_weight: 1.0
+  use_semantic: false          # <-- ablation: recon-only
+
+target:
+  ctmae_init_path: ${OUTPUT_ROOT}/ctmae_pretrain_crop/ckpt_iter200000.pt
+
+optim:
+  lr: 1.0e-4
+  weight_decay: 0.04
+  iters: 150000
+  warmup_iters: 4000
+  min_lr: 1.0e-6
+  grad_clip: 1.0
+
+ckpt:
+  save_every_iters: 5000
+  keep_latest: true
+  dir: ${OUTPUT_ROOT}/stage2_v1_recononly
+
+log:
+  print_every: 100
+  csv: ${OUTPUT_ROOT}/stage2_v1_recononly/log.csv

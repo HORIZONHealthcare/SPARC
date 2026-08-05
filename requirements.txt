@@ -1,0 +1,10 @@
+torch>=2.1
+numpy
+pandas
+pyyaml
+einops
+timm
+nibabel
+scikit-image
+zarr
+nanodrr

@@ -1,0 +1,55 @@
+# Stage 1 CT-MAE with crop-then-resample augmentation (anti-hallucination).
+# Each sample: native CT -> random off-centre crop @ random iso spacing
+# (1.0-2.0mm) -> 256^3 -> downsample 128^3 -> MAE. This 128^3 distribution
+# matches EXACTLY what Stage 2 feeds the frozen MAE as the coarse target, so
+# the encoder is not OOD on crops. Separate output dir (does NOT overwrite the
+# old full-volume-squash MAE at ${OUTPUT_ROOT}/ctmae_pretrain).
+meta:
+  name: ctmae_pretrain_crop
+  seed: 0
+  device: cuda
+
+data:
+  manifest: ${DATA_ROOT}/splits/ct_rate_train_zarr.csv   # zarr: correct HU + real spacing + bbox
+  batch_size: 4
+  num_workers: 12
+  hu_min: -1024.0
+  hu_max: 1024.0
+  crop_aug: true
+  crop_out_size: 256          # canonical resample res (then ->128 for MAE)
+  spacing_lo: 1.0             # mm, isotropic target spacing range
+  spacing_hi: 2.0
+
+model:
+  vol_size: 256                            # 16^3 = 4096 patches (high-res, patch16)
+  patch_size: 16
+  in_chans: 1
+  embed_dim: 1024                          # ViT-L
+  depth: 24
+  num_heads: 16
+  mlp_ratio: 4.0
+  dec_embed_dim: 510                       # divisible by 6 (sincos) + by num_heads
+  dec_depth: 8
+  dec_num_heads: 17                        # 510/17 = 30 head dim
+  mask_ratio: 0.75
+  norm_pix_loss: true
+
+optim:
+  # from-scratch MAE (pixel recon, NOT JEPA) -> standard MAE lr is safe.
+  # 256^3 patch16 (4096 tok), bs4/GPU -> ~61GB (fits 96GB; bs8 OOMs).
+  # 4 nodes x 4 GPU = global batch 64; 200k iters ~= 272 epochs over 47k CTs.
+  # LR kept AS-IS under DDP (no linear-scaling) per the 3D-CT-pretrain collapse lesson.
+  lr: 1.5e-4
+  weight_decay: 0.05
+  iters: 200000
+  warmup_iters: 8000
+  min_lr: 1.0e-6
+
+ckpt:
+  save_every_iters: 5000
+  keep_latest: true
+  dir: ${OUTPUT_ROOT}/ctmae_pretrain_crop
+
+log:
+  print_every: 500
+  csv: ${OUTPUT_ROOT}/ctmae_pretrain_crop/log.csv

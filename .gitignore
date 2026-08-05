@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.pt
+*.pth
+*.npy
+*.zarr/
+
+# Data and run artefacts, anchored to the repo root so that src/datasets/
+# (which is SPARC source code) is not caught by the same name.
+/outputs/
+/splits/
+/datasets/
+.DS_Store

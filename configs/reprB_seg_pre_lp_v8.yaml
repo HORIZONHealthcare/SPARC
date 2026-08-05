@@ -1,0 +1,24 @@
+meta:
+  name: reprB_seg_pre_lp_v8
+  seed: 0
+init_ckpt: ${OUTPUT_ROOT}/stage2_foundation/latest.pt
+geom_config: configs/recon_ours_ts_converged_v8.yaml
+mode: frozen
+data:
+  train_manifest: ${DATA_ROOT}/splits/ts_seg_train.csv
+  val_manifest: ${DATA_ROOT}/splits/ts_seg_val.csv
+  test_manifest: ${DATA_ROOT}/splits/ts_seg_test.csv
+  mask_dir: ${OUTPUT_ROOT}/ts_seg_masks256_all
+  out_res: 256
+  n_query: 65536
+  chunk: 65536
+head:
+  hidden: 256
+optim:
+  lr: 5.0e-05
+  weight_decay: 0.0001
+  epochs: 16
+  steps_per_ct: 1
+ckpt:
+  dir: ${OUTPUT_ROOT}/reprB_seg_pre_lp_v8
+n_seeds: 3
