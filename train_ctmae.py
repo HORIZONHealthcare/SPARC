@@ -34,11 +34,12 @@ from torch.utils.data.distributed import DistributedSampler
 
 from src.datasets.ct_dataset import CTDataset
 from src.models.ct_mae import CTMAE
+from src.utils.project_paths import expand_env
 
 
 def load_config(path: str) -> dict:
     with open(path) as f:
-        return yaml.safe_load(f)
+        return expand_env(yaml.safe_load(f))
 
 
 def setup_ddp() -> tuple[bool, int, int, int]:

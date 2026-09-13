@@ -1,10 +1,14 @@
-torch>=2.1
-numpy
-pandas
-pyyaml
-einops
-timm
-nibabel
-scikit-image
-zarr
-nanodrr
+# Tested with Python 3.11 and CUDA 12.4 on an NVIDIA GH200.
+# Install torch first, from the wheel index matching your CUDA:
+#   pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu124
+torch>=2.1          # tested 2.5.1
+numpy               # tested 2.4.3
+pandas              # tested 3.0.2
+pyyaml              # tested 6.0.3
+einops              # tested 0.8.2
+timm                # tested 1.0.26
+nibabel             # tested 5.4.2
+scikit-image        # tested 0.26.0
+zarr>=2.16,<3       # tested 2.18.7 (the v2 array/attrs API)
+nanodrr             # tested 0.1.4, differentiable DRR rendering
+torchio             # tested 1.2.0, CT loading for nanodrr

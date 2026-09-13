@@ -44,13 +44,14 @@ from src.utils.nanodrr_helpers import (
     sample_query_points, subject_from_tensor,
 )
 from src.utils.plucker import compute_plucker
+from src.utils.project_paths import expand_env
 
 mp.set_sharing_strategy("file_system")
 
 
 def load_config(path):
     with open(path) as f:
-        return yaml.safe_load(f)
+        return expand_env(yaml.safe_load(f))
 
 
 def setup_ddp():

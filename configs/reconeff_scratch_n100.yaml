@@ -1,0 +1,61 @@
+meta:
+  name: reconeff_scratch_n100
+  seed: 0
+  device: cuda
+init_ckpt: ${OUTPUT_ROOT}/stage2_foundation/latest.pt
+mode: finetune
+data:
+  train_manifest: ${DATA_ROOT}/splits/cls3039_train_pat100.csv
+  val_manifest: ${DATA_ROOT}/splits/cls3039_val_zarr.csv
+  v_min: 2
+  v_max: 16
+  det_px: 512
+  num_workers: 16
+  hu_min: -1024.0
+  hu_max: 1024.0
+  fixed_v: 8
+  fixed_pattern: uniform_circular
+  fixed_sad_mm: 800.0
+  fixed_sdd_ratio: 1.5
+  fixed_elev_deg: 0.0
+  fixed_det_pixel_mm: 2.4
+  crop_out_size: 256
+  spacing_lo: 1.3
+  spacing_hi: 2.0
+  eval_spacing: 1.6
+  center_crop: false
+  batch_size: 3
+fine:
+  n_query: 16384
+optim:
+  lr: 0.0001
+  weight_decay: 0.005
+  layer_decay: 0.75
+  iters: 33600
+  min_lr: 1.0e-06
+  grad_clip: 1.0
+  epochs: 400
+  warmup_epochs: 5
+eval:
+  out_res: 256
+  chunk: 65536
+  max_cts: 50
+  eval_every_epochs: 20
+ckpt:
+  dir: ${OUTPUT_ROOT}/reconeff_scratch_n100
+  keep_latest: true
+  resume: true
+  save_every_epochs: 5
+log:
+  csv: ${OUTPUT_ROOT}/reconeff_scratch_n100/log.csv
+  print_every: 200
+early_stop:
+  enabled: true
+  min_epochs: 120
+  patience: 5
+  min_delta: 0.02
+final_eval:
+  test_manifest: ${DATA_ROOT}/splits/cls3039_test_zarr.csv
+  checkpoint: best.pt
+  metrics_csv: ${OUTPUT_ROOT}/recon_metrics_ablation/chest_V8_scratch_converged.csv
+from_scratch: true

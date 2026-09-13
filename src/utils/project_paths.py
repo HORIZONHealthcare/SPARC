@@ -60,3 +60,18 @@ def project_relative_path(value: str | os.PathLike[str]) -> str:
         return str(path.relative_to(project_root()))
     except ValueError:
         return str(path)
+
+
+def expand_env(obj):
+    """Expand ${VAR} / $VAR in every string of a loaded config.
+
+    Configs here reference data and run directories through ${DATA_ROOT} and
+    ${OUTPUT_ROOT}; without this the placeholders would reach pandas / torch
+    verbatim. Strings with no variable in them are returned unchanged, so
+    plain relative paths keep working.
+    """
+    if isinstance(obj, dict):
+        return {k: expand_env(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [expand_env(v) for v in obj]
+    return _expand(obj) if isinstance(obj, str) else obj
