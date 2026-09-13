@@ -12,3 +12,5 @@ scikit-image        # tested 0.26.0
 zarr>=2.16,<3       # tested 2.18.7 (the v2 array/attrs API)
 nanodrr             # tested 0.1.4, differentiable DRR rendering
 torchio             # tested 1.2.0, CT loading for nanodrr
+SimpleITK        # tested 2.5.3, preprocessing only (NIfTI and DICOM readers)
+numcodecs        # tested 0.15.1, zarr compression in preprocessing
