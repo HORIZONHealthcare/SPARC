@@ -1,8 +1,8 @@
 # SPARC — 3D CT from a handful of X-ray projections
 
-SPARC is a foundation model that reconstructs a three-dimensional CT volume from four or eight X-ray projections. It is pretrained on 47,149 chest CT volumes with randomised acquisition geometry, so its encoder knows where each projection was taken. This repository provides the code, the pretrained weights, the sixteen per-dataset reconstruction models behind the paper's results, the exact data splits and the per-volume metrics.
+SPARC is a foundation model that reconstructs a three-dimensional CT volume from four or eight X-ray projections. It is pretrained on 47,149 chest CT volumes with randomised acquisition geometry, so its encoder knows where each projection was taken. This repository provides the code, the pretrained weights, the sixteen per-dataset reconstruction models behind the paper's results and the data splits.
 
-[Pretrained weights](https://huggingface.co/lyqun/SPARC) · [Reconstruction models](https://huggingface.co/lyqun/SPARC-reconstruction) · [Data splits](splits/) · [Per-volume results](results/)
+[Pretrained weights](https://huggingface.co/lyqun/SPARC) · [Reconstruction models](https://huggingface.co/lyqun/SPARC-reconstruction) · [Data splits](splits/)
 
 **A foundation model recovers three-dimensional anatomy and clinical findings from sparse X-ray projections**
 Yiqun Lin, Jiayang Xu, Lie Ju and colleagues · Manuscript (2026)
@@ -12,7 +12,7 @@ Yiqun Lin, Jiayang Xu, Lie Ju and colleagues · Manuscript (2026)
 - One pretrained backbone, adapted to eight CT datasets and three anatomies it never saw in pretraining (head, dental, spine).
 - With four or eight projections, SPARC gave the highest PSNR and SSIM in all sixteen dataset and view-count settings against five competing methods retrained under the same protocol.
 - Each projection is tagged with the geometry of its rays (Plücker coordinates), so the same model handles different view counts, angles and source-detector distances.
-- Every reconstruction number in the paper can be reproduced from the released weights by inference alone.
+- The paper's reconstruction results on all eight datasets can be reproduced from the released weights by inference alone.
 
 ![SPARC: projections are encoded with their ray geometry, lifted into a shared 3D feature volume and decoded at any resolution.](images/method-overview.png)
 
@@ -39,7 +39,6 @@ pip install -r requirements.txt
 | Stage-1 CT encoder | [Model card](https://huggingface.co/lyqun/SPARC) · [Checkpoint file](https://huggingface.co/lyqun/SPARC/blob/main/sparc_stage1_ctmae.pth) | Only needed to rerun Stage-2 pretraining |
 | Reconstruction models | [Model card](https://huggingface.co/lyqun/SPARC-reconstruction) | Sixteen checkpoints, one per dataset and view count (4 or 8 projections) |
 | Data splits | [`splits/`](splits/) | The train, validation and test lists used in the paper, after removing test volumes that repeat a training scan |
-| Per-volume results | [`results/`](results/) | PSNR and SSIM of every method on every test volume |
 
 The weights are released under CC BY-NC-SA 4.0. Accept the terms on the model page, log in with `hf auth login`, then download into `weights/`:
 
@@ -77,7 +76,6 @@ The converters in `preprocessing/` write that schema:
 | `preprocess_nii_zarr.py` | any other NIfTI dataset, driven by a manifest of source paths (MSD, AMOS, AbdomenCT-1K, VerSe, ToothFairy3) |
 | `preprocess_dicom_zarr.py` | DICOM studies, one study per volume (CQ500) |
 | `build_totalseg_manifest.py` | builds a TotalSegmentator source manifest |
-| `make_ctrate_patient_subsets.py` | nested patient-level CT-RATE training subsets for the limited-labelled-data experiment |
 
 The volumes themselves are not redistributed: each dataset has its own licence and access procedure
 (links in the table above). The split files in [`splits/`](splits/) list which volumes the paper used.
@@ -96,7 +94,7 @@ python finetune_foundation_recon.py --config configs/ours_head_converged_v8.yaml
     --metrics_csv cq500_V8_ours.csv
 ```
 
-This writes the PSNR and SSIM of every test volume, which should match `results/reconstruction/cq500_V8_ours.csv`. Replace `--metrics_csv` with `--export_dir <folder>` to save the reconstructed volumes (and their ground truth) as NumPy arrays in Hounsfield units. The config for each released model:
+This writes the PSNR and SSIM of every test volume; over the 71 CQ500 test volumes they average 33.06 dB and 0.9689, the values reported in the paper. Replace `--metrics_csv` with `--export_dir <folder>` to save the reconstructed volumes (and their ground truth) as NumPy arrays in Hounsfield units. The config for each released model:
 
 | Model | Config | Test split |
 |---|---|---|
@@ -165,13 +163,8 @@ python finetune_foundation_recon.py --config configs/ours_head_converged_v8.yaml
     --metrics_csv $OUTPUT_ROOT/metrics/cq500_V8_ours.csv
 ```
 
-Limited adaptation data (the pretraining-benefit experiment): `reconeff_dual_n<N>`
-finetunes the pretrained backbone and `reconeff_scratch_n<N>` trains the same
-architecture from random initialisation (`from_scratch: true`), for `N` in
-`{10, 25, 50, 100, 225, 450}` chest patients with paired projections and CT. The
-subsets used in the paper are `splits/cls3039_train_pat<N>.csv`; they were drawn once
-with `preprocessing/make_ctrate_patient_subsets.py --sizes 10 25 50 100 225 450`.
-`recon_scratch_clssplit_converged_v8.yaml` is the all-patient random-init counterpart.
+`recon_scratch_clssplit_converged_v8.yaml` trains the same reconstruction model on the
+CT-RATE training list from random initialisation (`from_scratch: true`).
 
 Downstream probes attach a head to the pretrained encoder:
 

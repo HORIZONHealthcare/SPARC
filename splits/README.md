@@ -8,7 +8,7 @@ original downloads. The configs in `configs/` read these files from `$DATA_ROOT/
 | Dataset | Files | Train | Validation | Test | Converted volumes | Used for |
 |---|---|---:|---:|---:|---|---|
 | CT-RATE, official train split | `ct_rate_train_zarr.csv` | 47,149 | | | `processed/ct_rate_zarr/` | Stage 1 and Stage 2 pretraining |
-| CT-RATE, official validation split | `cls3039_{train,val,test}_zarr.csv` | 2,134 | 303 | 602 | `processed/ct_rate_zarr_valid/` | chest reconstruction, classification, limited adaptation data |
+| CT-RATE, official validation split | `cls3039_{train,val,test}_zarr.csv` | 2,134 | 303 | 602 | `processed/ct_rate_zarr_valid/` | chest reconstruction and classification |
 | TotalSegmentator | `ts_seg_{train,val,test}.csv` | 1,006 | 52 | 79 | `processed/ts_all_zarr/` | reconstruction and organ segmentation |
 | Medical Segmentation Decathlon, six CT tasks | `msd_full_{train,val,test}_zarr.csv` | 986 | 212 | 209 | `processed/msd_full_zarr/` | reconstruction |
 | AbdomenCT-1K | `abdomenct1k_{train,val,test}_zarr.csv` | 744 | 159 | 158 | `processed/abdomenct1k_zarr/` | reconstruction |
@@ -39,19 +39,4 @@ volume; validation only selects the checkpoint.
 
 The pretraining list is the whole CT-RATE official training split; every evaluation list for the chest
 comes from the CT-RATE official validation split, so no volume or patient used in pretraining appears in
-any chest train, validation or test list. The other eight datasets were not used in pretraining.
-
-## Limited adaptation data
-
-Nested subsets of the CT-RATE training list, drawn once by patient with a fixed seed
-(`preprocessing/make_ctrate_patient_subsets.py`), so every method sees the same patients at every budget.
-Validation and test lists are unchanged.
-
-| File | Patients | Volumes |
-|---|---:|---:|
-| `cls3039_train_pat10.csv` | 10 | 28 |
-| `cls3039_train_pat25.csv` | 25 | 64 |
-| `cls3039_train_pat50.csv` | 50 | 127 |
-| `cls3039_train_pat100.csv` | 100 | 252 |
-| `cls3039_train_pat225.csv` | 225 | 531 |
-| `cls3039_train_pat450.csv` | 450 | 1,079 |
+any chest train, validation or test list. The other seven datasets were not used in pretraining.
