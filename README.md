@@ -1,4 +1,4 @@
-# SPARC — 3D CT from a handful of X-ray projections
+# SPARC: a foundation model for 3D CT reconstruction from sparse X-ray projections
 
 SPARC is a foundation model that reconstructs a three-dimensional CT volume from four or eight X-ray projections. It is pretrained on 47,149 chest CT volumes with randomised acquisition geometry, so its encoder knows where each projection was taken. This repository provides the code, the pretrained weights, the sixteen per-dataset reconstruction models behind the paper's results and the data splits.
 
@@ -143,8 +143,8 @@ python finetune_foundation_recon.py --config configs/ours_head_converged_v8.yaml
 ```
 
 Configs are named `ours_<dataset>_converged_v{4,8}.yaml`, plus
-`recon_ours_{clssplit,ts}_converged_v{4,8}.yaml` for the CT-RATE and
-TotalSegmentator splits that the downstream tasks reuse. Each view count is a
+`recon_ours_{clssplit,ts}_converged_v{4,8}.yaml` for CT-RATE and
+TotalSegmentator. Each view count is a
 separate model: a `v8` checkpoint is never evaluated at `V=4`.
 
 Every reconstruction config runs a fixed protocol: at most 400 epochs, early
@@ -159,13 +159,6 @@ python finetune_foundation_recon.py --config configs/ours_head_converged_v8.yaml
     --eval_ckpt best.pt \
     --metrics_manifest $DATA_ROOT/splits/cq500_test_zarr.csv \
     --metrics_csv $OUTPUT_ROOT/metrics/cq500_V8_ours.csv
-```
-
-Downstream probes attach a head to the pretrained encoder:
-
-```bash
-python train_repr_cls.py        --config configs/reprB_cls_pre_lp_v8.yaml   # linear probe
-python train_repr_downstream.py --config configs/reprB_seg_pre_ft_v8.yaml   # finetune
 ```
 
 ## Environment and hardware
@@ -189,15 +182,12 @@ src/datasets/drr_dataset.py      CT loading and acquisition geometry
 src/utils/nanodrr_helpers.py     differentiable DRR rendering and ray geometry
 src/utils/plucker.py             Plucker ray maths
 src/utils/project_paths.py       ${DATA_ROOT} / ${OUTPUT_ROOT} resolution
-src/utils/train_common.py        epoch budget, early stopping, exact resume
 
 preprocessing/                   CT volumes -> per-volume zarr + CSV manifests
 
 train_ctmae.py                   Stage 1
 train_foundation.py              Stage 2
 finetune_foundation_recon.py     Stage 3, reconstruction
-train_repr_cls.py                Stage 3, classification head
-train_repr_downstream.py         Stage 3, segmentation head
 ```
 
 ## Notes on scope
