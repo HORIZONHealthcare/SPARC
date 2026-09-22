@@ -167,6 +167,27 @@ def build_warmstart(init_ckpt, device, verbose, from_scratch=False):
     return model, cfg
 
 
+def resolve_ckpt(ckpt_dir, name):
+    """--eval_ckpt may be a file path (a released checkpoint); a bare name is looked up in the run directory."""
+    path = Path(name).expanduser()
+    return path if path.is_file() else Path(ckpt_dir) / name
+
+
+def load_recon_weights(model, path, device):
+    """Load reconstruction weights for evaluation or export. strict=False tolerates only the modules
+    the recon path never uses; any other missing or unexpected key is an error, because a silently
+    skipped load would evaluate the warm-start weights instead."""
+    ck = torch.load(path, map_location=device, weights_only=False)
+    msg = model.load_state_dict(ck["model"], strict=False)
+    unused = ("target_encoder", "semantic_head")
+    missing = [k for k in msg.missing_keys if not k.startswith(unused)]
+    unexpected = [k for k in msg.unexpected_keys if not k.startswith(unused)]
+    if missing or unexpected:
+        raise RuntimeError(f"{path} does not match the reconstruction model: "
+                           f"missing {missing[:4]}, unexpected {unexpected[:4]}")
+    return ck
+
+
 def build_param_groups(model, base_lr, wd, mode, layer_decay):
     """linear_probe -> only point_decoder trainable. finetune -> all, with
     optional layer-wise LR decay (encoder2d < volume3d < point_decoder)."""
@@ -444,7 +465,10 @@ def main():
                     help="load a ckpt and evaluate on the FULL test manifest, then exit")
     ap.add_argument("--eval_manifest", default=None)
     ap.add_argument("--eval_max_cts", type=int, default=100000)
-    ap.add_argument("--eval_ckpt", default="latest.pt")
+    ap.add_argument("--eval_ckpt", default="latest.pt",
+                    help="checkpoint to evaluate or export: a file path, or a name in the run directory")
+    ap.add_argument("--init_ckpt", default=None,
+                    help="Stage-2 weights to build and warm-start from; overrides init_ckpt in the config")
     ap.add_argument("--metrics_csv", default=None,
                     help="stream formal per-case PSNR/SSIM CSV, then exit")
     ap.add_argument("--metrics_manifest", default=None)
@@ -456,6 +480,8 @@ def main():
     is_ddp, rank, world, local = setup_ddp()
     is_main = rank == 0
     cfg = load_config(args.config)
+    if args.init_ckpt:
+        cfg["init_ckpt"] = args.init_ckpt
     torch.manual_seed(cfg["meta"]["seed"] + rank)
     device = torch.device(f"cuda:{local}") if torch.cuda.is_available() else torch.device("cpu")
     d, o = cfg["data"], cfg["optim"]
@@ -546,10 +572,7 @@ def main():
             metrics_ds, batch_size=1, num_workers=4,
             collate_fn=collate_first, worker_init_fn=eval_worker_init_fn,
         )
-        ck = torch.load(
-            ckpt_dir / args.eval_ckpt, map_location=device, weights_only=False
-        )
-        raw.load_state_dict(ck["model"], strict=False)
+        ck = load_recon_weights(raw, resolve_ckpt(ckpt_dir, args.eval_ckpt), device)
         if is_main:
             print(
                 f"[METRICS] ckpt={args.eval_ckpt} iter={ck.get('iter')} "
@@ -576,8 +599,7 @@ def main():
         eval_ds = mk_ds(eval_manifest, train=False)
         eval_loader = DataLoader(eval_ds, batch_size=1, num_workers=4, collate_fn=collate_first,
                                  worker_init_fn=eval_worker_init_fn)
-        ck = torch.load(ckpt_dir / args.eval_ckpt, map_location=device, weights_only=False)
-        raw.load_state_dict(ck["model"], strict=False); raw.eval()
+        ck = load_recon_weights(raw, resolve_ckpt(ckpt_dir, args.eval_ckpt), device); raw.eval()
         n_eval = min(args.eval_max_cts, len(eval_ds))
         if is_main:
             print(f"[EVAL_ONLY] ckpt={args.eval_ckpt} iter={ck.get('iter')} mode={mode} "
@@ -597,8 +619,7 @@ def main():
         exp_ds = mk_ds(exp_manifest, train=False)
         exp_loader = DataLoader(exp_ds, batch_size=1, num_workers=4, collate_fn=collate_first,
                                 worker_init_fn=eval_worker_init_fn)
-        ck = torch.load(ckpt_dir / args.eval_ckpt, map_location=device, weights_only=False)
-        raw.load_state_dict(ck["model"], strict=False); raw.eval()
+        ck = load_recon_weights(raw, resolve_ckpt(ckpt_dir, args.eval_ckpt), device); raw.eval()
         out_dir = Path(args.export_dir); out_dir.mkdir(parents=True, exist_ok=True)
         out_res, chunk = ev["out_res"], ev["chunk"]
         hu_min, hu_max = d["hu_min"], d["hu_max"]

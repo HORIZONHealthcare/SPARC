@@ -1,0 +1,14 @@
+dataset,case,reason,duplicate_of
+verse,sub-verse402_split-verse202_ct_0000,same subject as a training volume,sub-verse402_split-verse251_ct_0000
+verse,sub-verse404_split-verse256_ct_0000,same subject as a training volume,sub-verse404_split-verse209_ct_0000
+verse,sub-verse405_split-verse259_ct_0000,same subject as two training volumes,sub-verse405_split-verse212_ct_0000;sub-verse405_split-verse258_ct_0000
+verse,sub-verse406_split-verse261_ct_0000,same subject as a training volume,sub-verse406_split-verse214_ct_0000
+verse,sub-verse408_split-verse223_ct_0000,same subject as a training volume,sub-verse408_split-verse265_ct_0000
+verse,sub-verse414_split-verse241_ct_0000,same subject as a training volume,sub-verse414_split-verse273_ct_0000
+toothfairy3,ToothFairy3P_117_0000,identical voxel array to a training volume,ToothFairy3P_121_0000
+toothfairy3,ToothFairy3P_262_0000,identical voxel array to a training volume,ToothFairy3P_260_0000
+toothfairy3,ToothFairy3P_263_0000,identical voxel array to a training volume,ToothFairy3P_261_0000
+msd,spleen_1,identical voxel array to a training volume,hepaticvessel_433
+msd,pancreas_228,identical voxel array to a training volume,pancreas_007
+msd,hepaticvessel_154,near-identical to a training volume (thumbnail correlation 0.984),hepaticvessel_102
+abdomenct1k,Case_00638_0000,identical voxel array to a training volume,Case_00364_0000
