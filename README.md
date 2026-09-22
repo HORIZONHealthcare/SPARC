@@ -38,7 +38,7 @@ pip install -r requirements.txt
 | Pretrained backbone | [Model card](https://huggingface.co/lyqun/SPARC) · [Checkpoint file](https://huggingface.co/lyqun/SPARC/blob/main/sparc_stage2_backbone.pth) | Starting point for reconstruction on a new dataset |
 | Stage-1 CT encoder | [Model card](https://huggingface.co/lyqun/SPARC) · [Checkpoint file](https://huggingface.co/lyqun/SPARC/blob/main/sparc_stage1_ctmae.pth) | Only needed to rerun Stage-2 pretraining |
 | Reconstruction models | [Model card](https://huggingface.co/lyqun/SPARC-reconstruction) | Sixteen checkpoints, one per dataset and view count (4 or 8 projections) |
-| Data splits | [`splits/`](splits/) | The train, validation and test lists used in the paper, after removing test volumes that repeat a training scan |
+| Data splits | [`splits/`](splits/) | The reconstruction train, validation and test lists used in the paper, after removing test volumes that repeat a training scan |
 
 The weights are released under CC BY-NC-SA 4.0. Accept the terms on the model page, log in with `hf auth login`, then download into `weights/`:
 
@@ -133,8 +133,6 @@ torchrun --standalone --nproc_per_node=4 train_foundation.py --config configs/st
 
 Stage 2 reads the frozen Stage-1 encoder from `target.ctmae_init_path` in its config. To skip
 Stage 1, download `sparc_stage1_ctmae.pth` and set that entry to its path.
-`configs/stage2_v1_recononly.yaml` is the same Stage 2 with the semantic head switched off, the
-ablation reported in the paper.
 
 Reconstruction, one run per dataset and view count, starting from the pretrained backbone
 (`--init_ckpt` overrides the `init_ckpt` entry of the config, which points at your own Stage-2 run):
@@ -162,9 +160,6 @@ python finetune_foundation_recon.py --config configs/ours_head_converged_v8.yaml
     --metrics_manifest $DATA_ROOT/splits/cq500_test_zarr.csv \
     --metrics_csv $OUTPUT_ROOT/metrics/cq500_V8_ours.csv
 ```
-
-`recon_scratch_clssplit_converged_v8.yaml` trains the same reconstruction model on the
-CT-RATE training list from random initialisation (`from_scratch: true`).
 
 Downstream probes attach a head to the pretrained encoder:
 

@@ -1,6 +1,6 @@
 # Data splits
 
-The train, validation and test lists used in the paper, one CSV per split. Each file has one column,
+The reconstruction train, validation and test lists used in the paper, one CSV per split. Each file has one column,
 `ct_path`, giving a volume as `processed/<folder>/<case>.zarr` relative to `DATA_ROOT`; the file stem
 (`<case>`) is the case identifier of the original dataset, so the lists can also be matched against the
 original downloads. The configs in `configs/` read these files from `$DATA_ROOT/splits/`.
@@ -8,8 +8,8 @@ original downloads. The configs in `configs/` read these files from `$DATA_ROOT/
 | Dataset | Files | Train | Validation | Test | Converted volumes | Used for |
 |---|---|---:|---:|---:|---|---|
 | CT-RATE, official train split | `ct_rate_train_zarr.csv` | 47,149 | | | `processed/ct_rate_zarr/` | Stage 1 and Stage 2 pretraining |
-| CT-RATE, official validation split | `cls3039_{train,val,test}_zarr.csv` | 2,134 | 303 | 602 | `processed/ct_rate_zarr_valid/` | chest reconstruction and classification |
-| TotalSegmentator | `ts_seg_{train,val,test}.csv` | 1,006 | 52 | 79 | `processed/ts_all_zarr/` | reconstruction and organ segmentation |
+| CT-RATE, official validation split | `cls3039_{train,val,test}_zarr.csv` | 2,134 | 303 | 602 | `processed/ct_rate_zarr_valid/` | chest reconstruction |
+| TotalSegmentator | `ts_seg_{train,val,test}.csv` | 1,006 | 52 | 79 | `processed/ts_all_zarr/` | reconstruction |
 | Medical Segmentation Decathlon, six CT tasks | `msd_full_{train,val,test}_zarr.csv` | 986 | 212 | 209 | `processed/msd_full_zarr/` | reconstruction |
 | AbdomenCT-1K | `abdomenct1k_{train,val,test}_zarr.csv` | 744 | 159 | 158 | `processed/abdomenct1k_zarr/` | reconstruction |
 | AMOS (CT) | `amos_ct_{train,val,test}_zarr.csv` | 350 | 75 | 75 | `processed/amos_ct_zarr/` | reconstruction |
