@@ -1,4 +1,4 @@
-"""CT-only dataset for CT-MAE pretrain and downstream CT-input tasks.
+"""CT-only dataset for Stage-1 CT-MAE pretraining.
 
 Loads a NIfTI CT volume via nibabel, resamples to a fixed cube, and returns
 HU tensor + affine. No DRR rendering (that's for DRRDataset).

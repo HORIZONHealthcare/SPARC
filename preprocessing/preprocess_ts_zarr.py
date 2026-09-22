@@ -6,9 +6,11 @@ real Hounsfield units, and the header zooms give real mm spacing. So no metadata
 CSV is needed. We just clip HU, compute the body bbox, and write the SAME attrs
 schema the recon pipeline reads (spacing / bbox_lo / bbox_hi / shape / done).
 
-  python preprocessing/preprocess_ts_zarr.py \
-      --manifest splits/ts_bench_nii.csv --out-dir <zarr_dir> \
-      --out-manifest splits/ts_bench_zarr2.csv --workers 16
+Each zarr is named after the case folder (s0000/ct.nii.gz -> s0000.zarr).
+
+  python preprocessing/preprocess_ts_zarr.py --manifest totalsegmentator_nii.csv \
+      --out-dir $DATA_ROOT/processed/totalsegmentator \
+      --out-manifest totalsegmentator_all.csv --workers 16
 """
 
 from __future__ import annotations
@@ -82,8 +84,8 @@ def process_one(args: tuple[str, str]) -> tuple[str, str]:
 def main() -> None:
     import pandas as pd
     ap = argparse.ArgumentParser()
-    ap.add_argument("--manifest", required=True, help="CSV with image_path (NIfTI)")
-    ap.add_argument("--col", default="image_path")
+    ap.add_argument("--manifest", required=True, help="CSV with ct_path (NIfTI)")
+    ap.add_argument("--col", default="ct_path")
     ap.add_argument("--out-dir", required=True)
     ap.add_argument("--out-manifest", required=True)
     ap.add_argument("--workers", type=int, default=16)

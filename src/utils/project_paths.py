@@ -14,7 +14,6 @@ PROJECT_SUBDIRS = {
     "processed",
     "outputs",
     "pretrained_cache",
-    "vjepa2_checkpoints",
 }
 
 

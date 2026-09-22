@@ -18,7 +18,7 @@ import torch
 import torch.nn as nn
 
 from src.models.encoders import TransformerBlock
-from src.models.jepa import Conv3DRefine
+from src.models.conv3d_refine import Conv3DRefine
 from src.models.projection import project_points, query_view_feats
 
 

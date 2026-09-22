@@ -9,8 +9,8 @@ HU, compute the body bbox, and write the SAME attrs schema the recon pipeline re
 (spacing / bbox_lo / bbox_hi / shape / volume_name / done).
 
   python preprocessing/preprocess_dicom_zarr.py --root <root with study dirs> \
-      --study-glob 'CQ500CT*' --out-dir <zarr_dir> \
-      --out-manifest splits/cq500_all_zarr.csv --workers 16
+      --study-glob 'CQ500CT*' --out-dir $DATA_ROOT/processed/cq500 \
+      --out-manifest cq500_all.csv --workers 16
 """
 from __future__ import annotations
 if __package__ in (None, ""):

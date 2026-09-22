@@ -49,38 +49,24 @@ hf download lyqun/SPARC-reconstruction cq500_v8.pth --local-dir weights
 
 The reconstruction models are named `<dataset>_v<views>.pth`, with `<dataset>` one of `ctrate`, `totalsegmentator`, `msd`, `abdomenct1k`, `amos`, `cq500`, `toothfairy3`, `verse`.
 
-The datasets are not redistributed. Download them from their sources:
+The datasets are not redistributed. Download them from their sources; where we used a mirror or a repackaged copy, it is named:
 
 | Dataset | Source | Licence |
 |---|---|---|
-| CT-RATE (chest; pretraining, chest reconstruction) | [link](https://huggingface.co/datasets/ibrahimhamamci/CT-RATE) | CC BY-NC-SA 4.0 |
-| TotalSegmentator | [link](https://doi.org/10.5281/zenodo.6802613) | CC BY 4.0 |
-| Medical Segmentation Decathlon (six CT tasks) | [link](http://medicaldecathlon.com) | CC BY-SA 4.0 |
-| AbdomenCT-1K | [link](https://github.com/JunMa11/AbdomenCT-1K) | see source |
-| AMOS (CT) | [link](https://doi.org/10.5281/zenodo.7262581) | CC BY 4.0 |
-| CQ500 (head) | [link](http://headctstudy.qure.ai/dataset) | CC BY-NC-SA 4.0 |
-| ToothFairy3 (dental CBCT) | [link](https://toothfairy3.grand-challenge.org/dataset/) | CC BY-NC-SA 4.0, registration |
-| VerSe (spine) | [link](https://osf.io/nqjyw/), [link](https://osf.io/t98fz/) | CC BY-SA 4.0 |
+| CT-RATE (chest; pretraining and chest reconstruction) | [Hugging Face](https://huggingface.co/datasets/ibrahimhamamci/CT-RATE) | CC BY-NC-SA 4.0 |
+| TotalSegmentator (v2, 1,228 CT volumes) | [Zenodo](https://doi.org/10.5281/zenodo.6802613) | CC BY 4.0 |
+| Medical Segmentation Decathlon (six CT tasks) | [medicaldecathlon.com](http://medicaldecathlon.com) | CC BY-SA 4.0 |
+| AbdomenCT-1K | [GitHub](https://github.com/JunMa11/AbdomenCT-1K) | see source |
+| AMOS 2022 (CT scans only) | [Zenodo](https://doi.org/10.5281/zenodo.7262581) | CC BY 4.0 |
+| CQ500 (head) | [qure.ai](http://headctstudy.qure.ai/dataset); we used the [Kaggle mirror](https://www.kaggle.com/datasets/crawford/qureai-headct) | CC BY-NC-SA 4.0 |
+| ToothFairy3 (dental CBCT) | [Grand Challenge](https://toothfairy3.grand-challenge.org/dataset/) (registration) | CC BY-NC-SA 4.0 |
+| VerSe (spine) | [OSF](https://osf.io/nqjyw/), [OSF](https://osf.io/t98fz/); we used the copy in [CADS](https://huggingface.co/datasets/huggingface/CADS-dataset) (`0010_verse`) | CC BY-SA 4.0 |
 
 #### Data preparation
 
-Every loader reads per-volume zarr arrays - Hounsfield units clipped to
-`[-1024, 1024]`, with voxel spacing and a body bounding box stored as
-attributes - listed in single-column CSV manifests whose column is `ct_path`.
-The converters in `preprocessing/` write that schema:
+Convert each dataset with the scripts in `preprocessing/`. [`preprocessing/README.md`](preprocessing/README.md) lists, for every dataset, the files we used and the exact commands. Each volume becomes a zarr array of Hounsfield units (clipped to [-1024, 3071] and stored as int16) with its voxel spacing and body bounding box as attributes. Nothing is resampled at this stage: the data loader crops and resamples each volume to the 256³ grid set in the config and clips it to [-1024, 1024] HU.
 
-| Script | Input |
-| --- | --- |
-| `preprocess_ctrate_zarr.py` | CT-RATE NIfTI, whose files hold raw stored values and an identity affine: real HU and spacing are recovered from the metadata CSV |
-| `preprocess_ts_zarr.py` | TotalSegmentator NIfTI (already real HU and spacing) |
-| `preprocess_nii_zarr.py` | any other NIfTI dataset, driven by a manifest of source paths (MSD, AMOS, AbdomenCT-1K, VerSe, ToothFairy3) |
-| `preprocess_dicom_zarr.py` | DICOM studies, one study per volume (CQ500) |
-| `build_totalseg_manifest.py` | builds a TotalSegmentator source manifest |
-
-The volumes themselves are not redistributed: each dataset has its own licence and access procedure
-(links in the table above). The split files in [`splits/`](splits/) list which volumes the paper used.
-
-Copy the split files into place with `cp -r splits "$DATA_ROOT/"`. Each split lists volumes as `processed/<dataset>_zarr/<case>.zarr`, relative to `DATA_ROOT`, so write each dataset's converted volumes to that folder (for example `$DATA_ROOT/processed/cq500_zarr/`). The folder names are listed in [`splits/README.md`](splits/README.md).
+Then copy the split files into place with `cp -r splits "$DATA_ROOT/"`. A split lists volumes as `processed/<dataset>/<case>.zarr`, relative to `DATA_ROOT`, which is where the commands in `preprocessing/README.md` write them. [`splits/README.md`](splits/README.md) says how each split was made.
 
 ### 3. Reconstruct and evaluate with the released models
 
@@ -88,26 +74,15 @@ Copy the split files into place with `cp -r splits "$DATA_ROOT/"`. Each split li
 export DATA_ROOT=/path/to/data        # holds splits/ and processed/
 export OUTPUT_ROOT=/path/to/outputs
 export PYTHONPATH=.
-python finetune_foundation_recon.py --config configs/ours_head_converged_v8.yaml \
+python finetune_foundation_recon.py --config configs/cq500_v8.yaml \
     --init_ckpt weights/sparc_stage2_backbone.pth --eval_ckpt weights/cq500_v8.pth \
-    --metrics_manifest "$DATA_ROOT/splits/cq500_test_zarr.csv" \
-    --metrics_csv cq500_V8_ours.csv
+    --metrics_manifest "$DATA_ROOT/splits/cq500_test.csv" \
+    --metrics_csv cq500_v8_metrics.csv
 ```
 
-This writes the PSNR and SSIM of every test volume; over the 71 CQ500 test volumes they average 33.06 dB and 0.9689, the values reported in the paper. Replace `--metrics_csv` with `--export_dir <folder>` to save the reconstructed volumes (and their ground truth) as NumPy arrays in Hounsfield units. The config for each released model:
+This writes the PSNR and SSIM of every test volume; over the 71 CQ500 test volumes they average 33.06 dB and 0.9689, the values reported in the paper. Replace `--metrics_csv` with `--export_dir <folder>` to save the reconstructed volumes (and their ground truth) as NumPy arrays in Hounsfield units.
 
-| Model | Config | Test split |
-|---|---|---|
-| `ctrate_v{4,8}` | `recon_ours_clssplit_converged_v{4,8}.yaml` | `cls3039_test_zarr.csv` |
-| `totalsegmentator_v{4,8}` | `recon_ours_ts_converged_v{4,8}.yaml` | `ts_seg_test.csv` |
-| `msd_v{4,8}` | `ours_msd_full_converged_v{4,8}.yaml` | `msd_full_test_zarr.csv` |
-| `abdomenct1k_v{4,8}` | `ours_abdomenct1k_converged_v{4,8}.yaml` | `abdomenct1k_test_zarr.csv` |
-| `amos_v{4,8}` | `ours_amos_ct_converged_v{4,8}.yaml` | `amos_ct_test_zarr.csv` |
-| `cq500_v{4,8}` | `ours_head_converged_v{4,8}.yaml` | `cq500_test_zarr.csv` |
-| `toothfairy3_v{4,8}` | `ours_tf3_converged_v{4,8}.yaml` | `toothfairy3_test_zarr.csv` |
-| `verse_v{4,8}` | `ours_verse_converged_v{4,8}.yaml` | `verse_test_zarr.csv` |
-
-Each view count is a separate model: evaluate a `v8` model with eight projections only.
+Configs and splits are named like the models: the model `<dataset>_v<views>.pth` goes with the config `configs/<dataset>_v<views>.yaml` and the test split `splits/<dataset>_test.csv`. Each view count is a separate model: evaluate a `v8` model with eight projections only.
 
 To adapt SPARC to your own dataset, copy one of these configs, point its manifests at your splits, and train from the pretrained backbone with `--init_ckpt weights/sparc_stage2_backbone.pth` (see below).
 
@@ -123,12 +98,12 @@ Configs address data and runs through `${DATA_ROOT}` and `${OUTPUT_ROOT}`, which
 are expanded when a config is loaded. Paths inside a manifest may be absolute or
 relative to `DATA_ROOT`.
 
-Pretraining (single node shown; the paper's Stage 2 ran on 16 GPUs, one sample
+Pretraining on `splits/ctrate_pretrain.csv` (single node shown; the paper's Stage 2 ran on 16 GPUs, one sample
 per GPU, and the learning rate is deliberately **not** scaled with world size):
 
 ```bash
-torchrun --standalone --nproc_per_node=4 train_ctmae.py      --config configs/ctmae_pretrain_crop.yaml
-torchrun --standalone --nproc_per_node=4 train_foundation.py --config configs/stage2_foundation.yaml
+torchrun --standalone --nproc_per_node=4 train_ctmae.py      --config configs/stage1_ctmae.yaml
+torchrun --standalone --nproc_per_node=4 train_foundation.py --config configs/stage2_backbone.yaml
 ```
 
 Stage 2 reads the frozen Stage-1 encoder from `target.ctmae_init_path` in its config. To skip
@@ -138,13 +113,11 @@ Reconstruction, one run per dataset and view count, starting from the pretrained
 (`--init_ckpt` overrides the `init_ckpt` entry of the config, which points at your own Stage-2 run):
 
 ```bash
-python finetune_foundation_recon.py --config configs/ours_head_converged_v8.yaml \
+python finetune_foundation_recon.py --config configs/cq500_v8.yaml \
     --init_ckpt weights/sparc_stage2_backbone.pth
 ```
 
-Configs are named `ours_<dataset>_converged_v{4,8}.yaml`, plus
-`recon_ours_{clssplit,ts}_converged_v{4,8}.yaml` for CT-RATE and
-TotalSegmentator. Each view count is a
+There is one config per dataset and view count, `configs/<dataset>_v{4,8}.yaml`. Each view count is a
 separate model: a `v8` checkpoint is never evaluated at `V=4`.
 
 Every reconstruction config runs a fixed protocol: at most 400 epochs, early
@@ -152,13 +125,13 @@ stopping on held-out validation PSNR (minimum 120 epochs, then five consecutive
 validations without a 0.02 dB improvement), validating every 20 epochs, and the
 best-validation checkpoint is the one evaluated on test.
 
-To re-evaluate a finished run and write per-volume PSNR and SSIM:
+To evaluate a finished run on its test split and write per-volume PSNR and SSIM:
 
 ```bash
-python finetune_foundation_recon.py --config configs/ours_head_converged_v8.yaml \
+python finetune_foundation_recon.py --config configs/cq500_v8.yaml \
     --eval_ckpt best.pt \
-    --metrics_manifest $DATA_ROOT/splits/cq500_test_zarr.csv \
-    --metrics_csv $OUTPUT_ROOT/metrics/cq500_V8_ours.csv
+    --metrics_manifest $DATA_ROOT/splits/cq500_test.csv \
+    --metrics_csv $OUTPUT_ROOT/cq500_v8/test_metrics.csv
 ```
 
 ## Environment and hardware
@@ -183,7 +156,7 @@ src/utils/nanodrr_helpers.py     differentiable DRR rendering and ray geometry
 src/utils/plucker.py             Plucker ray maths
 src/utils/project_paths.py       ${DATA_ROOT} / ${OUTPUT_ROOT} resolution
 
-preprocessing/                   CT volumes -> per-volume zarr + CSV manifests
+preprocessing/                   CT volumes -> per-volume zarr (see preprocessing/README.md)
 
 train_ctmae.py                   Stage 1
 train_foundation.py              Stage 2

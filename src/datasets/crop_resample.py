@@ -11,7 +11,7 @@ in medicine). To force generalisation across physical scale and region we:
      cheaper than resampling the whole volume).
 
 The returned cube IS the resampled CT. Both the DRR source and the voxel GT are
-derived from this single cube downstream, so source-alignment is preserved by
+derived from this single cube, so source-alignment is preserved by
 construction. The affine is isotropic ``diag([s, s, s, 1])`` because the output
 grid is regular and isotropic at the chosen spacing.
 """

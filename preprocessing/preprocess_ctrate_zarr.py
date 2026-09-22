@@ -1,13 +1,13 @@
 """CT-RATE NIfTI -> per-volume zarr (correct HU + real spacing + body bbox).
 
 WHY: CT-RATE NIfTI store RAW stored values (e.g. 0..16270), NOT Hounsfield.
-The real HU = stored * RescaleSlope + RescaleIntercept (from train_metadata.csv;
+The real HU = stored * RescaleSlope + RescaleIntercept (from train_metadata.csv or validation_metadata.csv;
 typically slope=1, intercept=-8192). The NIfTI affine is identity, so the real
 voxel spacing is also lost in the file and must come from XYSpacing + ZSpacing in
 the metadata. Training directly on the raw values (the old pipeline) clamps all
 soft tissue to a constant -> the encoder learns nothing. This script fixes that:
 
-  HU = stored * slope + intercept  ->  clip [-1024, 1024]  ->  int16
+  HU = stored * slope + intercept  ->  clip [-1024, 3071]  ->  int16
 
 stored as a chunked zarr for fast random-crop reads, with attrs:
   spacing  = [sx, sy, sz] mm     (real, from metadata)
@@ -39,8 +39,8 @@ from numcodecs import Blosc
 
 # Store the FULL diagnostic CT range so the corpus is faithful + reusable for
 # any CT foundation-model project (bone/contrast up to ~3071 HU preserved).
-# Downstream consumers clip to their own window at the model boundary (our
-# sparse-view project clips to [-1024, 1024] via the train config's hu_min/hu_max).
+# Models clip to their own window when loading (SPARC uses [-1024, 1024], set by
+# hu_min/hu_max in each config).
 HU_LO, HU_HI = -1024.0, 3071.0
 BODY_THR = -500.0
 CHUNK = (64, 64, 64)

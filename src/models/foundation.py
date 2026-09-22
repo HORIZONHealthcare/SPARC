@@ -9,9 +9,9 @@ the pretraining signals:
   semantic head : a few transformer blocks + linear on F -> predicted CT-MAE
                   tokens, matched to a FROZEN CT-MAE (smooth_l1).  [JEPA]
 
-F (and the backbone producing it) is THE transferable representation: downstream
-recon / seg / cls all decode F. The heads are discardable pretraining signals,
-not separate encoders -> this is a single foundation model, not two models.
+The per-dataset reconstruction models are adapted from this backbone and its
+recon head. The semantic head is a pretraining signal only and is discarded
+afterwards -> this is a single foundation model, not two models.
 """
 
 from __future__ import annotations
@@ -168,7 +168,7 @@ class SparseViewFoundation(nn.Module):
         q_world: torch.Tensor, q_norm: torch.Tensor,   # (1, M, 3) dense grid
         chunk: int = 65536,
     ) -> torch.Tensor:
-        """Recon head on a dense query grid -> (1, M) density. For eval/seg/recon."""
+        """Recon head on a dense query grid -> (1, M) density. For evaluation and export."""
         pyr, vol = self.backbone(
             views, plucker, sad_mm, grid_world, k_inv, rt_inv, det_h, det_w,
         )

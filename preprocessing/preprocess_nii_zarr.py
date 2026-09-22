@@ -3,12 +3,13 @@
 Standard NIfTI store real HU + real voxel spacing in the header (unlike CT-RATE's raw
 values), so we read HU as-is via SimpleITK (which reads .nii.gz natively), take spacing
 from the header, clip HU, compute the body bbox, and write the same attrs the recon
-reader expects (spacing/bbox_lo/bbox_hi/shape/volume_name/done). Same process_one as
-preprocess_mha_zarr.py; only the input is a --manifest CSV (ct_path column) so we can
-control exactly which files (nested MSD tasks, AMOS CT-only, AbdomenCT-1K parts).
+reader expects (spacing/bbox_lo/bbox_hi/shape/volume_name/done). The input is a
+--manifest CSV (ct_path column), so exactly which files are converted is controlled by
+the manifest (MSD CT tasks, AMOS CT-only, AbdomenCT-1K parts, ToothFairy3, VerSe).
+Each zarr is named after its source file stem. See preprocessing/README.md.
 
-  python preprocessing/preprocess_nii_zarr.py --manifest splits/msd_full_nii.csv \
-      --out-dir <zarr_dir> --out-manifest splits/msd_full_all_zarr.csv --workers 32
+  python preprocessing/preprocess_nii_zarr.py --manifest msd_nii.csv \
+      --out-dir $DATA_ROOT/processed/msd --out-manifest msd_all.csv --workers 32
 """
 from __future__ import annotations
 if __package__ in (None, ""):

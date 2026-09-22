@@ -102,7 +102,7 @@ class CTMAE(nn.Module):
         return ids_keep, ids_restore, mask
 
     def encoder_forward(self, ct: torch.Tensor) -> torch.Tensor:
-        """Full-volume encoder forward (no masking) - used downstream / as target encoder.
+        """Full-volume encoder forward (no masking) - the frozen Stage-2 target encoder.
 
         Returns (B, N, embed_dim).
         """
