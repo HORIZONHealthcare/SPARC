@@ -37,7 +37,6 @@ optim:
 eval:
   out_res: 256
   chunk: 65536
-  max_cts: 50
   eval_every_epochs: 20
 ckpt:
   dir: ${OUTPUT_ROOT}/msd_v4

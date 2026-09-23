@@ -342,11 +342,12 @@ def render_batch(samples, device, n_query, grid_res, hu_min, hu_max,
 
 
 @torch.no_grad()
-def eval_psnr(raw_model, loader, device, grid_res, hu_min, hu_max, out_res, chunk, max_cts):
+def eval_psnr(raw_model, loader, device, grid_res, hu_min, hu_max, out_res, chunk, max_cts=None):
+    """Mean PSNR over the loader; every volume unless max_cts is given."""
     raw_model.eval()
     psnrs = []
     for i, sample in enumerate(loader):
-        if i >= max_cts:
+        if max_cts is not None and i >= max_cts:
             break
         subject = subject_from_tensor(sample["ct_hu"], sample["ct_affine"], device=device)
         rot = sample["rotations"].to(device); trans = sample["translations"].to(device)
@@ -851,10 +852,11 @@ def main():
             print(f"[checkpoint] epoch={epoch:.1f} iter={it+1}/{total}")
         if do_eval:
             psnr = eval_psnr(raw, eval_loader, device, grid_res, d["hu_min"], d["hu_max"],
-                             ev["out_res"], ev["chunk"], ev["max_cts"])
+                             ev["out_res"], ev["chunk"], ev.get("max_cts"))   # whole validation split
             if is_main:
                 epoch = (it + 1) / steps_per_epoch
-                print(f"[eval iter {it+1} epoch {epoch:.1f}] PSNR={psnr:.2f} dB")
+                print(f"[eval iter {it+1} epoch {epoch:.1f}] PSNR={psnr:.2f} dB "
+                      f"(N={len(eval_loader.dataset)} validation volumes)")
                 if log_csv:
                     log_csv.write(f"{it+1},{epoch:.4f},{float(loss):.5f},{float(point_loss):.5f},"
                                   f"{float(ssim_loss):.5f},{base_lrs[-1]*fac:.2e},"
