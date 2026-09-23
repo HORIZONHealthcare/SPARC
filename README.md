@@ -40,7 +40,7 @@ pip install -r requirements.txt
 | Reconstruction models | [Model card](https://huggingface.co/lyqun/SPARC-reconstruction) | Sixteen checkpoints, one per dataset and view count (4 or 8 projections) |
 | Data splits | [`splits/`](splits/) | The reconstruction train, validation and test lists used in the paper, after removing test volumes that repeat a training scan |
 
-The weights are released under CC BY-NC-SA 4.0. Accept the terms on the model page, log in with `hf auth login`, then download into `weights/`:
+The weights are released under CC BY-NC 4.0. Fill in the short form on each model page first; access is granted straight away. Then log in with `hf auth login` and download into `weights/`:
 
 ```bash
 hf download lyqun/SPARC sparc_stage2_backbone.pth --local-dir weights
@@ -193,4 +193,4 @@ For research enquiries, contact [Yukun Zhou](mailto:yukun.zhou.19@ucl.ac.uk) or 
 
 ## License
 
-The code is released under the Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0); see [LICENSE](LICENSE). The model weights on Hugging Face are released under CC BY-NC-SA 4.0, because the pretraining data (CT-RATE) and two of the evaluation datasets (CQ500, ToothFairy3) carry that licence. Commercial use is not permitted. The datasets keep their own licences, which these do not override.
+The code, documentation and model weights are released under [CC BY-NC 4.0](LICENSE). Use of the weights must also respect the terms of the dataset each model was trained on. The models are for research use only and are not medical devices.
