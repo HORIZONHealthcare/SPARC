@@ -54,9 +54,9 @@ The datasets are not redistributed. Download them from their sources; where we u
 | Dataset | Source | Licence |
 |---|---|---|
 | CT-RATE (chest; pretraining and chest reconstruction) | [Hugging Face](https://huggingface.co/datasets/ibrahimhamamci/CT-RATE) | CC BY-NC-SA 4.0 |
-| TotalSegmentator (v2, 1,228 CT volumes) | [Zenodo](https://doi.org/10.5281/zenodo.6802613) | CC BY 4.0 |
+| TotalSegmentator (v2.0.1, 1,228 CT volumes) | [Zenodo](https://doi.org/10.5281/zenodo.10047292) | CC BY 4.0 |
 | Medical Segmentation Decathlon (six CT tasks) | [medicaldecathlon.com](http://medicaldecathlon.com) | CC BY-SA 4.0 |
-| AbdomenCT-1K | [GitHub](https://github.com/JunMa11/AbdomenCT-1K) | see source |
+| AbdomenCT-1K (three image parts) | [GitHub](https://github.com/JunMa11/AbdomenCT-1K) (download form) | see source |
 | AMOS 2022 (CT scans only) | [Zenodo](https://doi.org/10.5281/zenodo.7262581) | CC BY 4.0 |
 | CQ500 (head) | [qure.ai](http://headctstudy.qure.ai/dataset); we used the [Kaggle mirror](https://www.kaggle.com/datasets/crawford/qureai-headct) | CC BY-NC-SA 4.0 |
 | ToothFairy3 (dental CBCT) | [Grand Challenge](https://toothfairy3.grand-challenge.org/dataset/) (registration) | CC BY-NC-SA 4.0 |

@@ -57,7 +57,7 @@ done
 
 ## TotalSegmentator
 
-TotalSegmentator v2 (1,228 CT volumes, [Zenodo](https://doi.org/10.5281/zenodo.6802613)), one folder per case
+TotalSegmentator v2.0.1 (1,228 CT volumes, [Zenodo](https://doi.org/10.5281/zenodo.10047292)), one folder per case
 with the CT in `ct.nii.gz`. The files store HU and real spacing. Each zarr is named after its case folder
 (`s0000.zarr`). One volume in our copy, `s0589`, could not be read. Which of the rest are in the splits is
 described in [`../splits/README.md`](../splits/README.md).
