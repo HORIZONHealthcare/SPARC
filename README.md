@@ -1,6 +1,6 @@
 # SPARC: a foundation model for 3D CT reconstruction from sparse X-ray projections
 
-SPARC is a foundation model that reconstructs a three-dimensional CT volume from four or eight X-ray projections. It is pretrained on 47,149 chest CT volumes with randomised acquisition geometry, so its encoder knows where each projection was taken. This repository provides the code, the pretrained weights, the sixteen per-dataset reconstruction models behind the paper's results and the data splits.
+SPARC is a foundation model that reconstructs a three-dimensional CT volume from a few X-ray projections. It is pretrained on 47,149 chest CT volumes with randomised acquisition geometry, so its encoder knows where each projection was taken. This repository provides the code, the pretrained weights, the sixteen per-dataset reconstruction models behind the paper's results and the data splits.
 
 [Pretrained weights](https://huggingface.co/lyqun/SPARC) · [Reconstruction models](https://huggingface.co/lyqun/SPARC-reconstruction) · [Data splits](splits/)
 
@@ -9,14 +9,17 @@ Yiqun Lin, Jiayang Xu, Lie Ju and colleagues · Manuscript (2026)
 
 ## Highlights
 
-- One pretrained backbone, adapted to eight CT datasets and three anatomies it never saw in pretraining (head, dental, spine).
-- With four or eight projections, SPARC gave the highest PSNR and SSIM in all sixteen dataset and view-count settings against five competing methods retrained under the same protocol.
-- Each projection is tagged with the geometry of its rays (Plücker coordinates), so the same model handles different view counts, angles and source-detector distances.
+- One pretrained backbone, adapted to eight CT datasets; pretraining used chest CT only, and seven of the eight datasets mainly cover other body regions (head, maxillofacial region, abdomen, spine, multiple regions).
+- With four or eight projections, SPARC gave the highest PSNR and SSIM on all eight datasets against five competing methods retrained under the same protocol.
+- Each projection is tagged with the geometry of its rays (Plücker coordinates), and pretraining draws the number of projections, their angles and the source and detector distances at random, so one backbone serves different acquisition settings.
+- In the paper, the reconstructions are given unchanged to a disease classifier and an organ segmentation model trained on full CT (Figure 1a).
 - The paper's reconstruction results on all eight datasets can be reproduced from the released weights by inference alone.
 
-![SPARC: projections are encoded with their ray geometry, lifted into a shared 3D feature volume and decoded at any resolution.](images/method-overview.png)
+![Study overview: an existing X-ray system acquires a few projections, SPARC reconstructs a 3D volume, and CT-based analysis tools are applied to it.](images/overview.png)
 
-*Figure 1. The SPARC model. Each projection is encoded together with the geometry of its rays, sampled into a 16³ feature volume that a 3D transformer refines, and decoded into Hounsfield units at any query point. During pretraining a second head predicts features of a frozen CT encoder.* [View full-size image](images/method-overview.png)
+*Figure 1. Study overview. **a**, Schematic of the approach: an existing X-ray system acquires very few X-ray projections, SPARC reconstructs a three-dimensional volume from them, and CT-based analysis tools trained on full CT classify diseases and segment organs directly on the reconstruction. **b**, Pretraining data, cost and the acquisition settings drawn at random for each training sample. **c**, Evaluation datasets by body region, each shown by a CT slice from its test set, with the number of CT volumes used from each dataset.* [View full-size image](images/overview.png)
+
+**Model.** SPARC encodes each projection, together with the Plücker coordinates of its rays, with a ConvNeXt pyramid and a transformer. A 16³ grid of points is projected onto every projection; the 2D features at these positions are sampled, combined by taking their maximum across projections and refined by a 3D transformer into a feature volume. From this volume and the 2D features, a point decoder predicts the attenuation at any query point, so any output grid can be produced. During pretraining, a second head predicts the tokens of a frozen CT encoder (a 3D masked autoencoder trained in Stage 1); this head is discarded afterwards. Supplementary Fig. 1 of the paper shows the model in detail.
 
 ## Getting started
 
@@ -37,7 +40,7 @@ pip install -r requirements.txt
 |---|---|---|
 | Pretrained backbone | [Model card](https://huggingface.co/lyqun/SPARC) · [Checkpoint file](https://huggingface.co/lyqun/SPARC/blob/main/sparc_stage2_backbone.pth) | Starting point for reconstruction on a new dataset |
 | Stage-1 CT encoder | [Model card](https://huggingface.co/lyqun/SPARC) · [Checkpoint file](https://huggingface.co/lyqun/SPARC/blob/main/sparc_stage1_ctmae.pth) | Only needed to rerun Stage-2 pretraining |
-| Reconstruction models | [Model card](https://huggingface.co/lyqun/SPARC-reconstruction) | Sixteen checkpoints, one per dataset and view count (4 or 8 projections) |
+| Reconstruction models | [Model card](https://huggingface.co/lyqun/SPARC-reconstruction) | Sixteen checkpoints, one per dataset and number of projections (4 or 8) |
 | Data splits | [`splits/`](splits/) | The reconstruction train, validation and test lists used in the paper, after removing test volumes that repeat a training scan |
 
 The weights are released under CC BY-NC 4.0. Fill in the short form on each model page first; access is granted straight away. Then log in with `hf auth login` and download into `weights/`:
@@ -47,7 +50,7 @@ hf download lyqun/SPARC sparc_stage2_backbone.pth --local-dir weights
 hf download lyqun/SPARC-reconstruction cq500_v8.pth --local-dir weights
 ```
 
-The reconstruction models are named `<dataset>_v<views>.pth`, with `<dataset>` one of `ctrate`, `totalsegmentator`, `msd`, `abdomenct1k`, `amos`, `cq500`, `toothfairy3`, `verse`.
+The reconstruction models are named `<dataset>_v<n>.pth`, with `<n>` the number of projections (4 or 8) and `<dataset>` one of `ctrate`, `totalsegmentator`, `msd`, `abdomenct1k`, `amos`, `cq500`, `toothfairy3`, `verse`.
 
 The datasets are not redistributed. Download them from their sources; where we used a mirror or a repackaged copy, it is named:
 
@@ -59,7 +62,7 @@ The datasets are not redistributed. Download them from their sources; where we u
 | AbdomenCT-1K (three image parts) | [GitHub](https://github.com/JunMa11/AbdomenCT-1K) (download form) | see source |
 | AMOS 2022 (CT scans only) | [Zenodo](https://doi.org/10.5281/zenodo.7262581) | CC BY 4.0 |
 | CQ500 (head) | [qure.ai](http://headctstudy.qure.ai/dataset); we used the [Kaggle mirror](https://www.kaggle.com/datasets/crawford/qureai-headct) | CC BY-NC-SA 4.0 |
-| ToothFairy3 (dental CBCT) | [Grand Challenge](https://toothfairy3.grand-challenge.org/dataset/) (registration) | CC BY-NC-SA 4.0 |
+| ToothFairy3 (maxillofacial CBCT) | [Grand Challenge](https://toothfairy3.grand-challenge.org/dataset/) (registration) | CC BY-NC-SA 4.0 |
 | VerSe (spine) | [OSF](https://osf.io/nqjyw/), [OSF](https://osf.io/t98fz/); we used the copy in [CADS](https://huggingface.co/datasets/huggingface/CADS-dataset) (`0010_verse`) | CC BY-SA 4.0 |
 
 #### Data preparation
@@ -82,7 +85,7 @@ python finetune_foundation_recon.py --config configs/cq500_v8.yaml \
 
 This writes the PSNR and SSIM of every test volume; over the 71 CQ500 test volumes they average 33.06 dB and 0.9689, the values reported in the paper. Replace `--metrics_csv` with `--export_dir <folder>` to save the reconstructed volumes (and their ground truth) as NumPy arrays in Hounsfield units.
 
-Configs and splits are named like the models: the model `<dataset>_v<views>.pth` goes with the config `configs/<dataset>_v<views>.yaml` and the test split `splits/<dataset>_test.csv`. Each view count is a separate model: evaluate a `v8` model with eight projections only.
+Configs and splits are named like the models: the model `<dataset>_v<n>.pth` goes with the config `configs/<dataset>_v<n>.yaml` and the test split `splits/<dataset>_test.csv`. Each number of projections has its own model: evaluate a `v8` model with eight projections only.
 
 To adapt SPARC to your own dataset, copy one of these configs, point its manifests at your splits, and train from the pretrained backbone with `--init_ckpt weights/sparc_stage2_backbone.pth` (see below).
 
@@ -109,7 +112,7 @@ torchrun --standalone --nproc_per_node=4 train_foundation.py --config configs/st
 Stage 2 reads the frozen Stage-1 encoder from `target.ctmae_init_path` in its config. To skip
 Stage 1, download `sparc_stage1_ctmae.pth` and set that entry to its path.
 
-Reconstruction, one run per dataset and view count, starting from the pretrained backbone
+Reconstruction, one run per dataset and number of projections, starting from the pretrained backbone
 (`--init_ckpt` overrides the `init_ckpt` entry of the config, which points at your own Stage-2 run):
 
 ```bash
@@ -117,8 +120,8 @@ python finetune_foundation_recon.py --config configs/cq500_v8.yaml \
     --init_ckpt weights/sparc_stage2_backbone.pth
 ```
 
-There is one config per dataset and view count, `configs/<dataset>_v{4,8}.yaml`. Each view count is a
-separate model: a `v8` checkpoint is never evaluated at `V=4`.
+There is one config per dataset and number of projections, `configs/<dataset>_v{4,8}.yaml`. Each number of
+projections has its own model: a `v8` checkpoint is never evaluated with four projections.
 
 Every reconstruction config runs a fixed protocol: at most 400 epochs, early
 stopping on held-out validation PSNR (minimum 120 epochs, then five consecutive
@@ -147,7 +150,7 @@ python finetune_foundation_recon.py --config configs/cq500_v8.yaml \
 
 ```
 src/models/foundation.py         SparseViewFoundation: one backbone, two heads
-src/models/xray_encoder_2d.py    per-view ConvNeXt pyramid + Plucker injection
+src/models/xray_encoder_2d.py    per-projection ConvNeXt pyramid + Plucker injection
 src/models/feature_volume_3d.py  projection, max-fuse, 3D transformer -> F
 src/models/point_decoder.py      implicit point decoder (resolution-free)
 src/models/ct_mae.py             Stage-1 3D masked autoencoder
@@ -170,7 +173,8 @@ against (DIF-Net, C2RV, DIF-Gaussian, SVCT, DeepSparse) are third-party code and
 are not redistributed here; please obtain them from their original authors. Where
 our modules build on ideas from those works - notably the projection-and-sample
 lifting and the point decoder, which follow DeepSparse - the source is noted in
-the file headers.
+the file headers. The disease classifier and organ segmentation model trained on full CT,
+which the paper uses to evaluate the reconstructions, are not included either.
 
 ## Citation
 
@@ -179,7 +183,7 @@ If you use this code, the weights or the splits, please cite:
 ```bibtex
 @misc{lin2026sparc,
   title  = {A foundation model recovers three-dimensional anatomy and clinical findings from sparse X-ray projections},
-  author = {Lin, Yiqun and Xu, Jiayang and Ju, Lie and Wang, Hualiang and Guo, Jiarong and Yao, Huifeng and Sun, Haoran and Zhou, Yukun},
+  author = {Lin, Yiqun and Xu, Jiayang and Ju, Lie and Guo, Jiarong and Wang, Weiru and Wang, Hualiang and Yao, Huifeng and Sun, Haoran and Pu, Bin and Alexander, Daniel C. and Cui, Hejie and Zhou, Yukun},
   year   = {2026},
   note   = {Manuscript}
 }
