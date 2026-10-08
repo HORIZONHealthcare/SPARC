@@ -1,16 +1,16 @@
-# SPARC: a foundation model for 3D CT reconstruction from sparse X-ray projections
+# SPARC: a foundation model for three-dimensional anatomical reconstruction from sparse X-ray projections
 
-SPARC is a foundation model that reconstructs a three-dimensional CT volume from a few X-ray projections. It is pretrained on 47,149 chest CT volumes with randomised acquisition geometry, so its encoder knows where each projection was taken. This repository provides the code, the pretrained weights, the sixteen per-dataset reconstruction models behind the paper's results and the data splits.
+SPARC is a foundation model that reconstructs a three-dimensional CT volume from a few X-ray projections. It is pretrained on 47,149 chest CT volumes with randomised acquisition geometry, so its encoder knows where each projection was taken. Pretraining took about 1,700 GPU-hours; with the released weights, it need not be repeated. This repository provides the code, the pretrained weights, the sixteen per-dataset reconstruction models behind the paper's results and the data splits.
 
 [Pretrained weights](https://huggingface.co/lyqun/SPARC) · [Reconstruction models](https://huggingface.co/lyqun/SPARC-reconstruction) · [Data splits](splits/)
 
-**A foundation model recovers three-dimensional anatomy and clinical findings from sparse X-ray projections**
+**A foundation model for three-dimensional anatomical reconstruction from sparse X-ray projections**
 Yiqun Lin, Jiayang Xu, Lie Ju and colleagues · Manuscript (2026)
 
 ## Highlights
 
 - One pretrained backbone, adapted to eight CT datasets; pretraining used chest CT only, and seven of the eight datasets mainly cover other body regions (head, maxillofacial region, abdomen, spine, multiple regions).
-- With four or eight projections, SPARC gave the highest PSNR and SSIM on all eight datasets against five competing methods retrained under the same protocol.
+- With four or eight projections, SPARC gave the highest PSNR and SSIM on all eight datasets against five competing methods trained under the same protocol.
 - Each projection is tagged with the geometry of its rays (Plücker coordinates), and pretraining draws the number of projections, their angles and the source and detector distances at random, so one backbone serves different acquisition settings.
 - In the paper, the reconstructions are given unchanged to a disease classifier and an organ segmentation model trained on full CT (Figure 1a).
 - The paper's reconstruction results on all eight datasets can be reproduced from the released weights by inference alone.
@@ -182,7 +182,7 @@ If you use this code, the weights or the splits, please cite:
 
 ```bibtex
 @misc{lin2026sparc,
-  title  = {A foundation model recovers three-dimensional anatomy and clinical findings from sparse X-ray projections},
+  title  = {A foundation model for three-dimensional anatomical reconstruction from sparse X-ray projections},
   author = {Lin, Yiqun and Xu, Jiayang and Ju, Lie and Guo, Jiarong and Wang, Weiru and Wang, Hualiang and Yao, Huifeng and Sun, Haoran and Pu, Bin and Alexander, Daniel C. and Cui, Hejie and Zhou, Yukun},
   year   = {2026},
   note   = {Manuscript}
