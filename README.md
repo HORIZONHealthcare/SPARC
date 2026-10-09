@@ -183,7 +183,7 @@ If you use this code, the weights or the splits, please cite:
 ```bibtex
 @misc{lin2026sparc,
   title  = {A foundation model for three-dimensional anatomical reconstruction from sparse X-ray projections},
-  author = {Lin, Yiqun and Xu, Jiayang and Ju, Lie and Guo, Jiarong and Wang, Weiru and Wang, Hualiang and Yao, Huifeng and Sun, Haoran and Pu, Bin and Alexander, Daniel C. and Cui, Hejie and Zhou, Yukun},
+  author = {Lin, Yiqun and Xu, Jiayang and Ju, Lie and Guo, Jiarong and Wang, Weiru and Wang, Hualiang and Yao, Huifeng and Sun, Haoran and Pu, Bin and Li, Kenli and Alexander, Daniel C. and Cui, Hejie and Zhou, Yukun},
   year   = {2026},
   note   = {Manuscript}
 }
